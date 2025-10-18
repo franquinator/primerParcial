@@ -1,82 +1,79 @@
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class EnemyManager : MonoBehaviour
 {
     [SerializeField]
-    private int tamañoInicialDeHorda = 2;
+    [Min(0)]
+    private int waveSize = 2;
     [SerializeField]
-    private int aumentoDeEnemigosPorOleada = 2;
+    [Min(0)]
+    private int increasedEnemiesByWave = 2;
 
     [SerializeField]
-    private float alturaMax;
+    private float maxSpawnHeight;
     [SerializeField]
-    private float alturaMin;
+    private float minSpawnHeight;
     [SerializeField]
     private float positionX;
 
     [SerializeField]
     private GameObject enemy;
-
     [SerializeField]
-    private float TiempoMinimo;
+    [Min(0)]
+    private float minSpawnTime;
     [SerializeField]
-    private float TiempoMaximo;
-
-
+    [Min(0)]
+    private float maxSpawnTime;
     [SerializeField]
-    private float TiempoEntreEnemigos;
-
+    [Min(0)]
+    private float waveDuration;
     [SerializeField]
-    private float segundosEntreOleadas;
+    [Min(0)]
+    private int numberOfWaves;
     [SerializeField]
-    private int cantDeOleadas;
-
-    private float TiempoDesdeElUltimoEnemigo;
-    private int enemigosEnPantalla;
-    // Start is called before the first frame update
+    [Min(0)]
+    private float scoreMultiplier;
     void Start()
     {
-        //StartCoroutine(CrearHorda());
-        StartCoroutine(CrearOleadas());
+        StartCoroutine(CreateWaves());   
     }
     private void OnDrawGizmos()
     {
-        Vector2 From = new(positionX, alturaMin);
-        Vector2 to = new(positionX, alturaMax);
+        Vector2 From = new(positionX, minSpawnHeight);
+        Vector2 to = new(positionX, maxSpawnHeight);
         Gizmos.color = Color.red;
         Gizmos.DrawLine(From, to);
     }
-    private void CrearEnemigo()
+    private void CreateEnemy()
     {
-        float positionY = Random.Range(alturaMin, alturaMax);
+        float positionY = Random.Range(minSpawnHeight, maxSpawnHeight);
         Instantiate(enemy, new Vector2(positionX, positionY), enemy.transform.rotation, transform);
     }
-    private void Update()
+    private IEnumerator CreateWaves()
     {
-        TiempoDesdeElUltimoEnemigo += Time.deltaTime;
-        if (TiempoDesdeElUltimoEnemigo > TiempoEntreEnemigos && transform.childCount < enemigosEnPantalla)
+        StartCoroutine(GenerarEnemigos());
+        for (int wave = 1; wave < numberOfWaves; wave++)
         {
-            CrearEnemigo();
-            TiempoDesdeElUltimoEnemigo = 0;
+            yield return new WaitForSeconds(waveDuration);
+            GameManager.instance.scorePerKill *= scoreMultiplier;
+            Timer.instance.ResetTimer();
+            waveSize += increasedEnemiesByWave;
         }
+        yield return new WaitForSeconds(waveDuration);
+        GameManager.instance.Win();
+
     }
-    private IEnumerator CrearOleadas()
+    private IEnumerator GenerarEnemigos()
     {
-        StartCoroutine(AumentarEnemigosEnPantalla(tamañoInicialDeHorda));
-        for (int i = 0; i < cantDeOleadas-1; i++)
+        while (true)
         {
-            yield return new WaitForSeconds(segundosEntreOleadas);
-            StartCoroutine(AumentarEnemigosEnPantalla(aumentoDeEnemigosPorOleada));
-        }
-    }
-    private IEnumerator AumentarEnemigosEnPantalla(int CantEnemigos)
-    {
-        for (int i = 0; i < CantEnemigos; i++)
-        {
-            enemigosEnPantalla++;
-            yield return new WaitForSeconds(Random.Range(TiempoMinimo, TiempoMaximo));
+            yield return new WaitForSeconds(Random.Range(minSpawnTime, maxSpawnTime));
+            int onScreenEnemies = transform.childCount;
+            if (onScreenEnemies < waveSize)
+            {
+                CreateEnemy();
+            }
         }
     }
 }

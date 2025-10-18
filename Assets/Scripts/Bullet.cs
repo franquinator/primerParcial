@@ -1,18 +1,16 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
 public class Bullet : MonoBehaviour
 {
-    private Animator animator;
+    private Animator _animator;
     [SerializeField]
     private int damage;
     [SerializeField]
     private AudioClip impactSound;
     private void Start()
     {
-        animator = GetComponent<Animator>();
+        _animator = GetComponent<Animator>();
     }
     void OnTriggerEnter2D(Collider2D collision)
     {
@@ -21,7 +19,7 @@ public class Bullet : MonoBehaviour
             collision.gameObject.GetComponent<Enemy>().LoseLife(damage);
             AudioManager.instance.PlayAudioClip(impactSound);
         }
-        animator.SetBool("Explode", true);
+        _animator.SetBool("Explode", true);
     }
     public void Dead()
     {

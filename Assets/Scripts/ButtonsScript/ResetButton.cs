@@ -1,0 +1,8 @@
+using UnityEngine;
+public class ResetButton : MonoBehaviour
+{
+    public void ResetGame()
+    {
+        GameManager.instance.ResetGame();
+    }
+}

@@ -4,44 +4,48 @@ using UnityEngine;
 [RequireComponent(typeof(Animator))]
 public class Enemy : MonoBehaviour
 {
-    private Animator animator;
-    private Rigidbody2D rb;
+    private Animator _animator;
+    private Rigidbody2D _rb;
     [SerializeField]
     private Vector2 direction;
     [SerializeField]
     private int damage;
     [SerializeField]
     [Min(1)]
-    private int maxLifes = 1;
-    private int lifes;
+    private int lives;
+    [SerializeField]
+    private int speed = 1;
     [SerializeField]
     private AudioClip destroySound;
     void Start()
     {
-        animator = GetComponent<Animator>();
-        rb = GetComponent<Rigidbody2D>();
-        lifes = maxLifes;
-        rb.velocity = direction;
+        _animator = GetComponent<Animator>();
+        _rb = GetComponent<Rigidbody2D>();
+    }
+    void FixedUpdate()
+    {
+        _rb.velocity = direction*speed;
+    }
+    void OnCollisionEnter2D(Collision2D other)
+    {
+        GameManager.instance.RemoveLives(damage);
+        _animator.SetBool("Explode", true);
     }
     public void LoseLife(int damage)
     {
-        lifes -= damage;
-        if (lifes < 1)
+        lives -= damage;
+        if (lives < 1)
         {
             AudioManager.instance.PlayAudioClip(destroySound);
-            animator.SetBool("Explode", true);
+            _animator.SetBool("Explode", true);
         }
     }
     public void Dead()
     {
-        ScoreManager.instance.AddScorePerKill();
+        GameManager.instance.AddScorePerKill();
         Destroy(gameObject);
     }
 
-    void OnCollisionEnter2D(Collision2D other)
-    {
-        HealthManager.instance.RemoveLives(damage);
-        animator.SetBool("Explode", true);
-    }
-    
+
+
 }

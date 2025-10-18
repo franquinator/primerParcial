@@ -8,56 +8,65 @@ public class Movement : MonoBehaviour
 
     [SerializeField]
     private float speed;
-    private Vector3 Direction;
+    private Vector3 direction;
     private Rigidbody2D rb;
     private Animator anim;
-    private SpriteRenderer spriteRenderer;
+    private SpriteRenderer _spriteRenderer;
     [SerializeField]
-    private float anchoDeZonaDeJuego;
+    private float widthOfPlayZone;
     [SerializeField]
-    private float altoDeZonaDeJuego;
-    // Start is called before the first frame update
+    private float heightOfPlayZone;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         anim = GetComponent<Animator>();
-        spriteRenderer = GetComponent<SpriteRenderer>();
+        _spriteRenderer = GetComponent<SpriteRenderer>();
     }
-
-    // Update is called once per frame
     void Update()
     {
-        Direction.x = Input.GetAxis("Horizontal");
-        Direction.y = Input.GetAxis("Vertical");
-
-        
-        anim.SetBool("Doblando", false);
-        if (Direction.y != 0)
-        {
-            anim.SetBool("Doblando", true);
-        }
-        
-
-        if (Direction.y > 0)
-        {
-            spriteRenderer.flipX = false;
-        }
-        else if (Direction.y < 0) {
-            spriteRenderer.flipX = true;
-        }
-
-        Direction = Direction.normalized;
+        MovementInput();
+        MovementAnimation();
     }
     private void FixedUpdate()
     {
-        Vector2 proxPosicion = transform.position + Direction * speed;
-        proxPosicion.y = Mathf.Clamp(proxPosicion.y, -altoDeZonaDeJuego, altoDeZonaDeJuego);
-        proxPosicion.x = Mathf.Clamp(proxPosicion.x, -anchoDeZonaDeJuego, anchoDeZonaDeJuego);
+        Vector2 proxPosition = transform.position + direction * speed;
 
-        rb.MovePosition(proxPosicion);
+        proxPosition.y = Mathf.Clamp(proxPosition.y, -heightOfPlayZone, heightOfPlayZone);
+        proxPosition.x = Mathf.Clamp(proxPosition.x, -widthOfPlayZone, widthOfPlayZone);
+        rb.MovePosition(proxPosition);
     }
-    private void OnDrawGizmos() {
+    private void OnDrawGizmos()
+    {
         Gizmos.color = Color.blue;
-        Gizmos.DrawWireCube(Vector2.zero, new Vector2(anchoDeZonaDeJuego*2,altoDeZonaDeJuego*2));
+        Gizmos.DrawWireCube(Vector2.zero, new Vector2(widthOfPlayZone * 2, heightOfPlayZone * 2));
+    }
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Enemy"))
+        {
+            anim.SetTrigger("Explode");
+        }
+    }
+    private void MovementInput()
+    {
+        direction.x = Input.GetAxis("Horizontal");
+        direction.y = Input.GetAxis("Vertical");
+        direction = direction.normalized;
+    }
+    private void MovementAnimation()
+    {
+        anim.SetBool("Turning", false);
+        if (direction.y != 0)
+        {
+            anim.SetBool("Turning", true);
+        }
+        if (direction.y > 0)
+        {
+            _spriteRenderer.flipX = false;
+        }
+        else if (direction.y < 0)
+        {
+            _spriteRenderer.flipX = true;
+        }
     }
 }
